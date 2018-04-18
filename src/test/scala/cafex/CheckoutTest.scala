@@ -9,28 +9,45 @@ class CheckoutTest extends FeatureSpec with GivenWhenThen with Matchers {
     scenario("total bill of an empty purchased items list") {
       Given("an empty list of purchased items")
       val checkout = new Checkout()
-      val items: List[String] = Nil
       When("totalBill is invoked on that list")
-      Then("the total bill is Some(0.0)")
-      checkout.totalBill(Nil) should be(Some(BigDecimal(0.00)))
+      Then("produces None ")
+      checkout.totalBill(Nil) should be(None)
     }
 
-    scenario("total bill of non-empty valid items without duplicates") {
-      Given("valid items without duplications")
+    scenario("total bill of only drinks") {
+      Given("only drinks in the item list")
       val checkout = new Checkout()
-      val items: List[String] = List("Cola", "Coffee", "Cheese Sandwich")
+      val items: List[String] = List("Cola", "Cola", "Coffee")
       When("totalBill is invoked on that list")
-      Then("the total bill is Some(3.5)")
-      checkout.totalBill(items) should be(Some(BigDecimal("3.5")))
+      Then("the total bill is Some(2.0)")
+      checkout.totalBill(items) should be(Some(BigDecimal("2.0")))
     }
 
-    scenario("total bill of non-empty valid items with duplicates") {
-      Given("valid items without duplications")
+    scenario("total bill of drinks and cold food") {
+      Given("drinks and only cold food in th list")
       val checkout = new Checkout()
-      val items: List[String] = List("Steak Sandwich", "Steak Sandwich")
+      val items: List[String] = List("Cola", "Cola", "Coffee", "Cheese Sandwich")
       When("totalBill is invoked on that list")
-      Then("the total bill is Some(9.0)")
-      checkout.totalBill(items) should be(Some(BigDecimal("9.0")))
+      Then("the total bill is Some(4.40) which 10% higher than totalBill without service charge")
+      checkout.totalBill(items) should be(Some(BigDecimal("4.40")))
+    }
+
+    scenario("total bill for items with hot food and up to 20 pounds service charge") {
+      Given("drinks, hot  and  cold food in the list")
+      val checkout = new Checkout()
+      val items: List[String] = List("Coffee", "Cheese Sandwich", "Steak Sandwich", "Steak Sandwich")
+      When("totalBill is invoked on that list")
+      Then("the total bill is Some(14.4) which 20% higher than totalBill without service charge")
+      checkout.totalBill(items) should be(Some(BigDecimal("14.4")))
+    }
+
+    scenario("total bill for list with hot food and uncapped service chage is higher than 20 pounds ") {
+      Given("hot food in the list")
+      val checkout = new Checkout()
+      val items: List[String] = List.fill(100)("Steak Sandwich")
+      When("totalBill is invoked on that list")
+      Then("the total bill is Some(470) which totalBill + 20 pounds")
+      checkout.totalBill(items) should be(Some(BigDecimal("470.00")))
     }
 
     scenario("total bill of list with invalid item") {
